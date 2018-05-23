@@ -1,4 +1,4 @@
-import urllib
+import urllib.request
 import math
 import time
 from datetime import datetime

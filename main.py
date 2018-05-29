@@ -3,7 +3,8 @@ import math
 import time
 from datetime import datetime
 from bs4 import BeautifulSoup
-
+import stepperMotorL6470 as sm 
+import wiringpi as wp
 
 def getLatestDataLists(location):
     url =  "http://www1.kaiho.mlit.go.jp/KANKYO/TIDE/real_time_tide/images/tide_real/" + location + "Today.txt"
@@ -35,29 +36,39 @@ def getLatestDataLists(location):
 def interpolate(target_val, init_val, duration):
     print(str(init_val) + ' -> ' + str(target_val))
     if target_val != init_val:
-        d = (target_val - init_val) / duration
+        d = (target_val - init_val)
+        print("speed %d" % (d*100))
+        sm.L6470_run(0, int(d*100))
+        d = d / duration
         val = init_val
         for i in range(duration):
             print(i, val)
             val = val + d
             time.sleep(1)
     else:
+        sm.L6470_softstop(0)
         time.sleep(60)
 
+if __name__=="__main__":
+    try:
+        sm.L6470_init(0)
+        time.sleep(1)
+        while True:
+            tokyo_data = getLatestDataLists('tokyoM')
 
+            t = datetime.now()
+            index = t.hour * 12 + math.floor(t.minute / 5) - 1
 
-while True:
-    tokyo_data = getLatestDataLists('tokyoM')
+            while tokyo_data[index]['cm'] == 9999:
+                if index <= 0 :
+                    break
+                index = index - 1
+            latest = tokyo_data[index]
 
-    t = datetime.now()
-    index = t.hour * 12 + math.floor(t.minute / 5) - 1
+            interpolate(tokyo_data[index]['cm'], tokyo_data[index-1]['cm'], 300)
 
-    while tokyo_data[index]['cm'] == 9999:
-        if index <= 0 :
-            break
-        index = index - 1
-    latest = tokyo_data[index]
+            print(latest)
 
-    interpolate(tokyo_data[index]['cm'], tokyo_data[index-1]['cm'], 300)
-
-    print(latest)
+    except KeyboardInterrupt:
+       sm.L6470_softstop(0) 
+       sm.L6470_softhiz(0)

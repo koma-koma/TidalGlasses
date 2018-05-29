@@ -1,7 +1,7 @@
 import wiringpi as wp
 import time
 import struct
-import signal
+import sys
 
 L6470_SPI_CHANNEL = 0
 L6470_SPI_SPEED   = 1000000
@@ -13,23 +13,17 @@ io = wp.GPIO(wp.GPIO.WPI_MODE_GPIO)
 io.pinMode(BUSY_PIN_0, io.INPUT)
 io.pinMode(BUSY_PIN_1, io.INPUT)
 
-def exit_handler(signal, frame):
-    # Ctrl+Cが押されたときにデバイスを初期状態に戻して終了する。
-    print("\nExit")
-    L6470_softstop(0)
-    L6470_softstop(1)
-    L6470_softhiz(0)
-    L6470_softhiz(1)
-    quit()
-
-# 終了処理用のシグナルハンドラを準備
-signal.signal(signal.SIGINT, exit_handler)
-
 def L6470_write(channel, data):
     data = struct.pack('B', data)
     return wp.wiringPiSPIDataRW(channel, data)
 
 def L6470_init(channel):
+    print('***** start spi test program *****')
+
+    # SPI channel 0 を 1MHz で開始。
+    #wp.wiringPiSetupGpio()
+    wp.wiringPiSPISetup(0, L6470_SPI_SPEED)
+
     # MAX_SPEED設定
     L6470_write(channel, 0x07)
     # 最大回転スピード値(19bit) 初期値は 0x41
@@ -153,32 +147,28 @@ def L6470_getstatus(channel):
     time.sleep(0.2)
 
 if __name__=="__main__":
+    speed = 30000
     
-    speed = 0
-
-    print('***** start spi test program *****')
-
-    # SPI channel 0 を 1MHz で開始。
-    #wp.wiringPiSetupGpio()
-    wp.wiringPiSPISetup(0, L6470_SPI_SPEED)
-
-    # L6470の初期化。
     L6470_init(0)
 
-    while True:
-        for i in range(0, 10):
-            speed = speed + 2000
+    try:
+        while True:
+            print("** Move %d **" % speed)
             L6470_run(0, speed)
-            print('*** Speed %d ***' % speed)
+            time.sleep(5)
+            L6470_softstop(0)
+            time.sleep(1)
+            print("** Move %d **" % -speed)
+            L6470_run(0, -speed)
+            time.sleep(5)
+            L6470_softstop(0)
             time.sleep(1)
 
-        for i in range(0, 10):
-            speed = speed - 2000
-            L6470_run(0, speed)
-            print('*** Speed %d ***' % speed)
-            time.sleep(1)
-
+    except KeyboardInterrupt:
+        print("\nExit")
         L6470_softstop(0)
+        L6470_softstop(1)
         L6470_softhiz(0)
+        L6470_softhiz(1)
         quit()
-    quit()
+        sys.exit()

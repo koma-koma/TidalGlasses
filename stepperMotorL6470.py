@@ -167,7 +167,7 @@ def L6470_getparam(add, bytes):
     val=0
     send_add = add | 0x20
     L6470_send_u(send_add)
-    for i in range(bytes-1):
+    for i in range(bytes):
         val = val << 8
         wp.digitalWrite(SS_PIN, 0) # ~SSイネーブル。
         val = val | wp.wiringPiSPIDataRW(L6470_SPI_CHANNEL, 0x00) # アドレスもしくはデータ送信。

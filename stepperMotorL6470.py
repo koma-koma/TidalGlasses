@@ -26,8 +26,7 @@ def L6470_init(channel):
     # MAX_SPEED設定
     L6470_write(channel, 0x07)
     # 最大回転スピード値(19bit) 初期値は 0x41
-    L6470_write(channel, 0x00)
-    L6470_write(channel, 0x41)
+    L6470_write(channel, 0x28)
 
     # KVAL_HOLD設定。
     # レジスタアドレス。

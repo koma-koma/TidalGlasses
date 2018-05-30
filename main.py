@@ -37,8 +37,8 @@ def interpolate(target_val, init_val, duration):
     print(str(init_val) + ' -> ' + str(target_val))
     if target_val != init_val:
         d = (target_val - init_val)
-        print("speed %d" % (d*100))
-        sm.L6470_run(0, int(d*100))
+        print("speed %d" % (d*500))
+        sm.L6470_run(0, int(d*500))
         d = d / duration
         val = init_val
         for i in range(duration):

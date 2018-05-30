@@ -129,7 +129,7 @@ def L6470_softhiz():
 def L6470_transfer(add, bytes, val):
     data = [0, 0, 0]
     L6470_send(add)
-    for i in range(bytes-1):
+    for i in range(bytes):
         data[i] = val & 0xff
         val = val >> 8
 

@@ -1,7 +1,6 @@
 import wiringpi as wp
 import time
 import struct
-import sys
 
 L6470_SPI_CHANNEL = 0
 L6470_SPI_SPEED   = 1000000
@@ -167,8 +166,5 @@ if __name__=="__main__":
     except KeyboardInterrupt:
         print("\nExit")
         L6470_softstop(0)
-        L6470_softstop(1)
         L6470_softhiz(0)
-        L6470_softhiz(1)
         quit()
-        sys.exit()

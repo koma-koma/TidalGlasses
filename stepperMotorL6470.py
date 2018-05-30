@@ -75,7 +75,7 @@ def L6470_resetdevice():
     L6470_send_u(0x00)
     L6470_send_u(0xc0)
 
-def L6470_init(channel):
+def L6470_init():
     print('***** start spi test program *****')
 
     # SPI channel 0 を 1MHz で開始。
@@ -83,7 +83,7 @@ def L6470_init(channel):
     wp.wiringPiSPISetup(0, L6470_SPI_SPEED)
 
     # MAX_SPEED設定 最大回転スピード値(19bit) 初期値は 0x41
-    L6470_setparam_maxspeed(30000)
+    L6470_setparam_maxspeed(0x41)
 
     # KVAL_HOLD設定。
     L6470_setparam_kvalhold(0xFF)
@@ -104,7 +104,7 @@ def L6470_init(channel):
     L6470_setparam_stallth(0x7F)
 
 
-def L6470_run(channel, speed):
+def L6470_run(dir, speed):
     if(dir==1):
         L6470_transfer(0x51,3,speed)
     else:
@@ -116,18 +116,18 @@ def L6470_move(dir, n_step):
     else:
         L6470_transfer(0x40,3,n_step)
 
-def L6470_softstop(channel):
+def L6470_softstop():
     print('***** SoftStop. *****')
     L6470_transfer(0xB0, 0, 0)
 
-def L6470_softhiz(channel):
+def L6470_softhiz():
     print('***** Softhiz. *****')
     L6470_transfer(0xA8, 0, 0)
 
 
 
 def L6470_transfer(add, bytes, val):
-    data = []
+    data = [0, 0, 0]
     L6470_send(add)
     for i in range(bytes-1):
         data[i] = val & 0xff
@@ -147,6 +147,7 @@ def L6470_send(add_or_val):
         pass
 
     data = struct.pack('B', add_or_val)
+    print(data)
     return wp.wiringPiSPIDataRW(L6470_SPI_CHANNEL, data)
 
 def L6470_send_u(add_or_val):
@@ -166,25 +167,25 @@ def L6470_getparam(add, bytes):
     return val
 
 if __name__=="__main__":
-    speed = 30000
+    speed = 3000
     
-    L6470_init(0)
+    L6470_init()
 
     try:
         while True:
             print("** Move %d **" % speed)
             L6470_run(0, speed)
             time.sleep(5)
-            L6470_softstop(0)
+            L6470_softstop()
             time.sleep(1)
             print("** Move %d **" % -speed)
-            L6470_run(0, -speed)
+            L6470_run(1, speed)
             time.sleep(5)
-            L6470_softstop(0)
+            L6470_softstop()
             time.sleep(1)
 
     except KeyboardInterrupt:
         print("\nExit")
-        L6470_softstop(0)
-        L6470_softhiz(0)
+        L6470_softstop()
+        L6470_softhiz()
         quit()

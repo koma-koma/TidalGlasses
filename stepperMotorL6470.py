@@ -164,7 +164,8 @@ def L6470_send_u(add_or_val):
     return wp.wiringPiSPIDataRW(L6470_SPI_CHANNEL, data)
 
 def L6470_getparam(add, bytes):
-    val=0
+    # ** Segmentation Fault が起きる **
+    val = 0
     send_add = add | 0x20
     L6470_send_u(send_add)
     for i in range(bytes):

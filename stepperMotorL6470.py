@@ -5,16 +5,75 @@ import struct
 L6470_SPI_CHANNEL = 0
 L6470_SPI_SPEED   = 1000000
 
-BUSY_PIN_0 = 21
-BUSY_PIN_1 = 20
+BUSY_PIN= 21
+SS_PIN = 20
 
 io = wp.GPIO(wp.GPIO.WPI_MODE_GPIO)
-io.pinMode(BUSY_PIN_0, io.INPUT)
-io.pinMode(BUSY_PIN_1, io.INPUT)
+io.pinMode(BUSY_PIN, io.INPUT)
+io.pinMode(SS_PIN, io.OUTPUT)
 
-def L6470_write(channel, data):
-    data = struct.pack('B', data)
-    return wp.wiringPiSPIDataRW(channel, data)
+# set parameter
+def L6470_setparam_abspos(val):L6470_transfer(0x01,3,val)
+def L6470_setparam_elpos(val):L6470_transfer(0x02,2,val)
+def L6470_setparam_mark(val):L6470_transfer(0x03,3,val)
+def L6470_setparam_acc(val):L6470_transfer(0x05,2,val)
+def L6470_setparam_dec(val):L6470_transfer(0x06,2,val)
+def L6470_setparam_maxspeed(val):L6470_transfer(0x07,2,val)
+def L6470_setparam_minspeed(val):L6470_transfer(0x08,2,val)
+def L6470_setparam_fsspd(val):L6470_transfer(0x15,2,val)
+def L6470_setparam_kvalhold(val):L6470_transfer(0x09,1,val)
+def L6470_setparam_kvalrun(val):L6470_transfer(0x0a,1,val)
+def L6470_setparam_kvalacc(val):L6470_transfer(0x0b,1,val)
+def L6470_setparam_kvaldec(val):L6470_transfer(0x0c,1,val)
+def L6470_setparam_intspd(val):L6470_transfer(0x0d,2,val)
+def L6470_setparam_stslp(val):L6470_transfer(0x0e,1,val)
+def L6470_setparam_fnslpacc(val):L6470_transfer(0x0f,1,val)
+def L6470_setparam_fnslpdec(val):L6470_transfer(0x10,1,val)
+def L6470_setparam_ktherm(val):L6470_transfer(0x11,1,val)
+def L6470_setparam_ocdth(val):L6470_transfer(0x13,1,val)
+def L6470_setparam_stallth(val):L6470_transfer(0x14,1,val)
+def L6470_setparam_stepmood(val):L6470_transfer(0x16,1,val)
+def L6470_setparam_alareen(val):L6470_transfer(0x17,1,val)
+def L6470_setparam_config(val):L6470_transfer(0x18,2,val)
+
+# get parameter
+def L6470_getparam_abspos():return L6470_getparam(0x01,3)
+def L6470_getparam_elpos():return L6470_getparam(0x02,2)
+def L6470_getparam_mark():return L6470_getparam(0x03,3)
+def L6470_getparam_speed():return L6470_getparam(0x04,3)
+def L6470_getparam_acc():return L6470_getparam(0x05,2)
+def L6470_getparam_dec():return L6470_getparam(0x06,2)
+def L6470_getparam_maxspeed():return L6470_getparam(0x07,2)
+def L6470_getparam_minspeed():return L6470_getparam(0x08,2)
+def L6470_getparam_fsspd():return L6470_getparam(0x15,2)
+def L6470_getparam_kvalhold():return L6470_getparam(0x09,1)
+def L6470_getparam_kvalrun():return L6470_getparam(0x0a,1)
+def L6470_getparam_kvalacc():return L6470_getparam(0x0b,1)
+def L6470_getparam_kvaldec():return L6470_getparam(0x0c,1)
+def L6470_getparam_intspd():return L6470_getparam(0x0d,2)
+def L6470_getparam_stslp():return L6470_getparam(0x0e,1)
+def L6470_getparam_fnslpacc():return L6470_getparam(0x0f,1)
+def L6470_getparam_fnslpdec():return L6470_getparam(0x10,1)
+def L6470_getparam_ktherm():return L6470_getparam(0x11,1)
+def L6470_getparam_adcout():return L6470_getparam(0x12,1)
+def L6470_getparam_ocdth():return L6470_getparam(0x13,1)
+def L6470_getparam_stallth():return L6470_getparam(0x14,1)
+def L6470_getparam_stepmood():return L6470_getparam(0x16,1)
+def L6470_getparam_alareen():return L6470_getparam(0x17,1)
+def L6470_getparam_config():return L6470_getparam(0x18,2)
+def L6470_getparam_status():return L6470_getparam(0x19,2)
+
+# def L6470_write(channel, data):
+#     data = struct.pack('B', data)
+#     return wp.wiringPiSPIDataRW(channel, data)
+
+
+def L6470_resetdevice():
+    L6470_send_u(0x00) #nop命令
+    L6470_send_u(0x00)
+    L6470_send_u(0x00)
+    L6470_send_u(0x00)
+    L6470_send_u(0xc0)
 
 def L6470_init(channel):
     print('***** start spi test program *****')
@@ -23,126 +82,88 @@ def L6470_init(channel):
     #wp.wiringPiSetupGpio()
     wp.wiringPiSPISetup(0, L6470_SPI_SPEED)
 
-    # MAX_SPEED設定
-    L6470_write(channel, 0x07)
-    # 最大回転スピード値(19bit) 初期値は 0x41
-    L6470_write(channel, 0x28)
+    # MAX_SPEED設定 最大回転スピード値(19bit) 初期値は 0x41
+    L6470_setparam_maxspeed(30000)
 
     # KVAL_HOLD設定。
-    # レジスタアドレス。
-    L6470_write(channel, 0x09)
-    # モータ停止中の電圧設定(8bit)
-    L6470_write(channel, 0xFF)
+    L6470_setparam_kvalhold(0xFF)
 
     # KVAL_RUN設定。
-    # レジスタアドレス。
-    L6470_write(channel, 0x0A)
-    # モータ定速回転中の電圧設定(8bit)
-    L6470_write(channel, 0xFF)
+    L6470_setparam_kvalrun(0xFF)
 
     # KVAL_ACC設定。
-    # レジスタアドレス。
-    L6470_write(channel, 0x0B)
-    #  モータ加速中の電圧設定(8bit)
-    L6470_write(channel, 0xFF)
+    L6470_setparam_kvalacc(0xFF)
 
     # KVAL_DEC設定。
-    # レジスタアドレス。
-    L6470_write(channel, 0x0C)
-    # モータ減速中の電圧設定(8bit)
-    L6470_write(channel, 0x40)
+    L6470_setparam_kvaldec(0x40)
 
     # OCD_TH設定。
-    # レジスタアドレス。
-    L6470_write(channel, 0x13)
-    # オーバーカレントスレッショルド設定(4bit)
-    L6470_write(channel, 0x0F)
+    L6470_setparam_ocdth(0x0F)
 
     # STALL_TH設定。
-    # レジスタアドレス。
-    L6470_write(channel, 0x14)
-    # ストール電流スレッショルド設定(4bit)
-    L6470_write(channel, 0x7F)
+    L6470_setparam_stallth(0x7F)
+
 
 def L6470_run(channel, speed):
-    # 方向検出。
-    if (speed < 0):
-        dir = 0x50
-        spd = -1 * speed
+    if(dir==1):
+        L6470_transfer(0x51,3,speed)
     else:
-        dir = 0x51
-        spd = speed
+        L6470_transfer(0x50,3,speed)
 
-    # 送信バイトデータ生成。
-    spd_h = (0x0F0000 & spd) >> 16
-    spd_m = (0x00FF00 & spd) >> 8
-    spd_l = (0x00FF & spd)
-
-    # コマンド（レジスタアドレス）送信。
-    L6470_write(channel, dir)
-    # データ送信。
-    L6470_write(channel, spd_h)
-    L6470_write(channel, spd_m)
-    L6470_write(channel, spd_l)
-
-def L6470_move(channel, n_step):
-    # 方向検出。
-    if (n_step < 0):
-        dir = 0x40
-        stp = -1 * n_step
+def L6470_move(dir, n_step):
+    if(dir==1):
+        L6470_transfer(0x41,3,n_step)
     else:
-        dir = 0x41
-        stp = n_step
-
-    # 送信バイトデータ生成。
-    stp_h   = (0x3F0000 & stp) >> 16 
-    stp_m   = (0x00FF00 & stp) >> 8 
-    stp_l   = (0x0000FF & stp) 
-
-    # コマンド（レジスタアドレス）送信。
-    L6470_write(channel, dir)
-    # データ送信。
-    L6470_write(channel, stp_h)
-    L6470_write(channel, stp_m)
-    L6470_write(channel, stp_l)
-
-    if channel == 0:
-        pin     = BUSY_PIN_0
-    else:
-        pin     = BUSY_PIN_1
-    while( io.digitalRead(pin) == 0 ):
-        pass
+        L6470_transfer(0x40,3,n_step)
 
 def L6470_softstop(channel):
     print('***** SoftStop. *****')
-    dir = 0xB0
-    # コマンド（レジスタアドレス）送信。
-    L6470_write(channel, dir)
-    if channel == 0:
-        pin     = BUSY_PIN_0
-    else:
-        pin     = BUSY_PIN_1
-    while( io.digitalRead(pin) == 0 ):
-        pass
+    L6470_transfer(0xB0, 0, 0)
 
 def L6470_softhiz(channel):
     print('***** Softhiz. *****')
-    dir = 0xA8
-    # コマンド（レジスタアドレス）送信。
-    L6470_write(channel, dir)
-    if channel == 0:
-        pin     = BUSY_PIN_0
-    else:
-        pin     = BUSY_PIN_1
-    while( io.digitalRead(pin) == 0 ):
+    L6470_transfer(0xA8, 0, 0)
+
+
+
+def L6470_transfer(add, bytes, val):
+    data = []
+    L6470_send(add)
+    for i in range(bytes-1):
+        data[i] = val & 0xff
+        val = val >> 8
+
+    if(bytes==3):
+        L6470_send(data[2])
+
+    if(bytes>=2):
+        L6470_send(data[1])
+
+    if(bytes>=1):
+        L6470_send(data[0])
+
+def L6470_send(add_or_val):
+    while( io.digitalRead(BUSY_PIN) == 0 ):
         pass
 
-def L6470_getstatus(channel):
-    print("***** Getstatus. *****")
-    dir = 0xD0
-    # コマンド（レジスタアドレス）送信。
-    print(L6470_write(channel, dir))
-    time.sleep(0.2)
+    data = struct.pack('B', add_or_val)
+    return wp.wiringPiSPIDataRW(L6470_SPI_CHANNEL, data)
+
+def L6470_send_u(add_or_val):
+    data = struct.pack('B', add_or_val)
+    return wp.wiringPiSPIDataRW(L6470_SPI_CHANNEL, data)
+
+def L6470_getparam(add, bytes):
+    val=0
+    send_add = add | 0x20
+    L6470_send_u(send_add)
+    for i in range(bytes-1):
+        val = val << 8
+        wp.digitalWrite(SS_PIN, 0) # ~SSイネーブル。
+        val = val | wp.wiringPiSPIDataRW(L6470_SPI_CHANNEL, 0x00) # アドレスもしくはデータ送信。
+        wp.digitalWrite(SS_PIN, 1) # ~SSディスエーブル 
+
+    return val
 
 if __name__=="__main__":
     speed = 30000

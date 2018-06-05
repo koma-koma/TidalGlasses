@@ -82,8 +82,11 @@ def L6470_init():
     #wp.wiringPiSetupGpio()
     wp.wiringPiSPISetup(0, L6470_SPI_SPEED)
 
+    #デバイスのリセット
+    L6470_resetdevice()
+
     # MAX_SPEED設定 最大回転スピード値(19bit) 初期値は 0x41
-    L6470_setparam_maxspeed(0x41)
+    L6470_setparam_maxspeed(0x20)
 
     # KVAL_HOLD設定。
     L6470_setparam_kvalhold(0xFF)
@@ -103,7 +106,6 @@ def L6470_init():
     # STALL_TH設定。
     L6470_setparam_stallth(0x7F)
 
-
 def L6470_run(dir, speed):
     if(dir==1):
         L6470_transfer(0x51,3,speed)
@@ -116,6 +118,15 @@ def L6470_move(dir, n_step):
     else:
         L6470_transfer(0x40,3,n_step)
 
+def L6470_goto(pos):
+    L6470_transfer(0x60,3,pos)
+
+def L6470_gotodia(dir, pos):
+    if(dir==1):  
+        L6470_transfer(0x69,3,pos)
+    else: 
+        L6470_transfer(0x68,3,pos)
+
 def L6470_softstop():
     print('***** SoftStop. *****')
     L6470_transfer(0xB0, 0, 0)
@@ -123,8 +134,6 @@ def L6470_softstop():
 def L6470_softhiz():
     print('***** Softhiz. *****')
     L6470_transfer(0xA8, 0, 0)
-
-
 
 def L6470_transfer(add, bytes, val):
     data = [0, 0, 0]

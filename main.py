@@ -46,12 +46,12 @@ def interpolate(target_val, init_val, duration):
             val = val + d
             time.sleep(1)
     else:
-        sm.L6470_softstop(0)
+        sm.L6470_softstop()
         time.sleep(60)
 
 if __name__=="__main__":
     try:
-        sm.L6470_init(0)
+        sm.L6470_init()
         time.sleep(1)
         while True:
             tokyo_data = getLatestDataLists('tokyoM')
@@ -70,5 +70,5 @@ if __name__=="__main__":
             print(latest)
 
     except KeyboardInterrupt:
-       sm.L6470_softstop(0) 
-       sm.L6470_softhiz(0)
+       sm.L6470_softstop() 
+       sm.L6470_softhiz()

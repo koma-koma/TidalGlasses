@@ -75,6 +75,8 @@ def interpolate(target_val, init_val, duration):
 
 if __name__=="__main__":
     try:
+        print("type location")
+        location = input()
         # sm.L6470_init()
         time.sleep(1)
 
